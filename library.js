@@ -4,17 +4,17 @@
 	var User = module.parent.require('./user'),
 		db = module.parent.require('../src/database'),
 		passport = module.parent.require('passport'),
-  		fs = module.parent.require('fs'),
-  		path = module.parent.require('path'),
-  		nconf = module.parent.require('nconf'),
-  		winston = module.parent.require('winston'),
-  		passportOAuth;
-  		
-  	if (meta.config['social:oauth:type'] === '2') {
-  		passportOAuth = require('passport-oauth').OAuth2Strategy;
-  	} else if (meta.config['social:oauth:type'] === '1') {
-  		passportOAuth = require('passport-oauth').OAuthStrategy;
-  	}
+		fs = module.parent.require('fs'),
+		path = module.parent.require('path'),
+		nconf = module.parent.require('nconf'),
+		winston = module.parent.require('winston'),
+		passportOAuth;
+
+	if (meta.config['social:oauth:type'] === '2') {
+		passportOAuth = require('passport-oauth').OAuth2Strategy;
+	} else if (meta.config['social:oauth:type'] === '1') {
+		passportOAuth = require('passport-oauth').OAuthStrategy;
+	}
 
 	var constants = Object.freeze({
 		'name': "Generic OAuth",

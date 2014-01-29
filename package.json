@@ -1,0 +1,31 @@
+{
+  "name": "nodebb-plugin-sso-oauth",
+  "version": "0.1.0-1",
+  "description": "NodeBB Generic OAuth SSO",
+  "main": "library.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth"
+  },
+  "keywords": [
+    "nodebb",
+    "plugin",
+    "oauth",
+    "sso",
+    "single sign on",
+    "registration"
+  ],
+  "author": {
+    "name": "Julian Lam",
+    "email": "julian@nodebb.org"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth/issues"
+  },
+  "readme": "",
+  "readmeFilename": "README.md",
+  "dependencies": {
+    "passport-oauth": "~1.0.0"
+  }
+}

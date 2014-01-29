@@ -1,0 +1,19 @@
+{
+	"id": "nodebb-plugin-sso-oauth",
+	"name": "NodeBB OAuth SSO",
+	"description": "NodeBB Plugin that allows users to login/register via any configured OAuth provider.",
+	"url": "https://github.com/julianlam/nodebb-plugin-sso-oauth",
+	"library": "./library.js",
+	"hooks": [
+		{
+			"hook": "filter:auth.init", "method": "getStrategy", "callbacked": false
+		},
+		{
+			"hook": "filter:admin.header.build", "method": "addMenuItem", "callbacked": false
+		},
+		{
+			"hook": "filter:admin.create_routes", "method": "addAdminRoute", "callbacked": true
+		}
+	],
+	"staticDir": "./static"
+}

@@ -114,7 +114,7 @@
 				url: '/auth/oauth',
 				callbackURL: '/auth/generic/callback',
 				icon: 'check',
-				scope: meta.config['social:oauth:scope'].split(',')
+				scope: (meta.config['social:oauth:scope'] || '').split(',')
 			});
 
 			return strategies;

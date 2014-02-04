@@ -43,7 +43,7 @@
 		</div>
 
 		<div class="form-group">
-			<input type="text" data-field="social:oauth:scope" title="Comma-separated scope" class="form-control" placeholder="Comma-separated scope (e.g. &quot;user,email,address&quot;)">
+			<input type="text" data-field="social:oauth:userProfileUrl" title="User Profile URL" class="form-control" placeholder="User Profile URL">
 		</div>
 	</div>
 </form>
@@ -65,9 +65,12 @@
 		} else if (value === '2') {
 			$('[data-strategy="1"]').hide();
 			$('[data-strategy="2"]').show();
+		} else {
+			$('[data-strategy]').hide();
 		}
 	}
 
+	toggleFields(false);
 	$('[data-field="social:oauth:type"]').on('change', function() {
 		toggleFields(this.value);
 	})

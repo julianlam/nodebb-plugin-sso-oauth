@@ -38,6 +38,7 @@
 
 		if (passportOAuth && configOk) {
 			if (meta.config['social:oauth:type'] === '1') {
+				// OAuth options
 				opts = {
 					requestTokenURL: meta.config['social:oauth:reqTokenUrl'],
 					accessTokenURL: meta.config['social:oauth:accessTokenUrl'],
@@ -46,7 +47,29 @@
 					consumerSecret: meta.config['social:oauth:secret'],
 					callbackURL: nconf.get('url') + '/auth/generic/callback'
 				};
+
+				passportOAuth.Strategy.prototype.userProfile = function(token, secret, params, done) {
+					this._oauth.get(meta.config['social:oauth:userProfileUrl'], token, secret, function(err, body, res) {
+						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
+
+						try {
+							var json = JSON.parse(body);
+
+							var profile = { provider: 'generic' };
+							// Alter this section to include whatever data is necessary
+							// NodeBB requires the following: id, displayName, emails, e.g.:
+							// profile.id = json.id;
+							// profile.displayName = json.name;
+							// profile.emails = [{ value: json.email }];
+
+							done(null, profile);
+						} catch(e) {
+							done(e);
+						}
+					});
+				};
 			} else if (meta.config['social:oauth:type'] === '2') {
+				// OAuth 2 options
 				opts = {
 					authorizationURL: meta.config['social:oauth2:authUrl'],
 					tokenURL: meta.config['social:oauth2:tokenUrl'],
@@ -54,10 +77,30 @@
 					clientSecret: meta.config['social:oauth2:secret'],
 					callbackURL: nconf.get('url') + '/auth/generic/callback'
 				};
+
+				passportOAuth.Strategy.prototype.userProfile = function(accessToken, done) {
+					this._oauth2.get(meta.config['social:oauth:userProfileUrl'], accessToken, function(err, body, res) {
+						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
+
+						try {
+							var json = JSON.parse(body);
+
+							var profile = { provider: 'generic' };
+							// Alter this section to include whatever data is necessary
+							// NodeBB requires the following: id, displayName, emails, e.g.:
+							// profile.id = json.id;
+							// profile.displayName = json.name;
+							// profile.emails = [{ value: json.email }];
+
+							done(null, profile);
+						} catch(e) {
+							done(e);
+						}
+					});
+				};
 			}
+
 			passport.use('Generic OAuth', new passportOAuth(opts, function(token, secret, profile, done) {
-				console.log('this is the info I get back:', arguments);
-				process.exit();
 				OAuth.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
 					if (err) {
 						return done(err);
@@ -125,7 +168,7 @@
 	};
 
 	OAuth.getUidByOAuthid = function(oAuthid, callback) {
-		db.getObjectField('oauthid:uid', oAuthid, function(err, uid) {
+		db.getObjectField('oAuthid:uid', oAuthid, function(err, uid) {
 			if (err) {
 				return callback(err);
 			}

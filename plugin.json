@@ -15,5 +15,5 @@
 			"hook": "filter:admin.create_routes", "method": "addAdminRoute", "callbacked": true
 		}
 	],
-	"staticDir": "./static"
+	"staticDirs": ["./static"]
 }

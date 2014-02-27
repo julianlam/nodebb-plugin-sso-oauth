@@ -4,4 +4,4 @@ NodeBB Plugin that allows users to login/register via any configured OAuth provi
 
 ## Installation
 
-    npm install nodebb-plugin-sso-oauth
+    npm install julianlam/nodebb-plugin-sso-oauth

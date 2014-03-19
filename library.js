@@ -11,118 +11,139 @@
 		winston = module.parent.require('winston'),
 		passportOAuth;
 
-	if (meta.config['social:oauth:type'] === '2') {
-		passportOAuth = require('passport-oauth').OAuth2Strategy;
-	} else if (meta.config['social:oauth:type'] === '1') {
-		passportOAuth = require('passport-oauth').OAuthStrategy;
-	}
-
 	var constants = Object.freeze({
 		'name': "Generic OAuth",
 		'admin': {
-			'route': '/oauth',
+			'route': '/plugins/sso-oauth',
 			'icon': 'fa-key'
 		}
 	});
 
 	var OAuth = {};
 
-	OAuth.getStrategy = function(strategies) {
-		var	oAuthKeys = ['social:oauth:reqTokenUrl', 'social:oauth:accessTokenUrl', 'social:oauth:authUrl', 'social:oauth:key', 'social:oauth:secret'],
-			oAuth2Keys = ['social:oauth2:authUrl', 'social:oauth2:tokenUrl', 'social:oauth2:id', 'social:oauth2:secret'],
-			configOk = oAuthKeys.every(function(key) {
-				return meta.config[key];
-			}) || oAuth2Keys.every(function(key) {
-				return meta.config[key];
-			}),
-			opts;
-
-		if (passportOAuth && configOk) {
-			if (meta.config['social:oauth:type'] === '1') {
-				// OAuth options
-				opts = {
-					requestTokenURL: meta.config['social:oauth:reqTokenUrl'],
-					accessTokenURL: meta.config['social:oauth:accessTokenUrl'],
-					userAuthorizationURL: meta.config['social:oauth:authUrl'],
-					consumerKey: meta.config['social:oauth:key'],
-					consumerSecret: meta.config['social:oauth:secret'],
-					callbackURL: nconf.get('url') + '/auth/generic/callback'
-				};
-
-				passportOAuth.Strategy.prototype.userProfile = function(token, secret, params, done) {
-					this._oauth.get(meta.config['social:oauth:userProfileUrl'], token, secret, function(err, body, res) {
-						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
-
-						try {
-							var json = JSON.parse(body);
-
-							var profile = { provider: 'generic' };
-							// Alter this section to include whatever data is necessary
-							// NodeBB requires the following: id, displayName, emails, e.g.:
-							// profile.id = json.id;
-							// profile.displayName = json.name;
-							// profile.emails = [{ value: json.email }];
-
-							done(null, profile);
-						} catch(e) {
-							done(e);
-						}
-					});
-				};
-			} else if (meta.config['social:oauth:type'] === '2') {
-				// OAuth 2 options
-				opts = {
-					authorizationURL: meta.config['social:oauth2:authUrl'],
-					tokenURL: meta.config['social:oauth2:tokenUrl'],
-					clientID: meta.config['social:oauth2:id'],
-					clientSecret: meta.config['social:oauth2:secret'],
-					callbackURL: nconf.get('url') + '/auth/generic/callback'
-				};
-
-				passportOAuth.Strategy.prototype.userProfile = function(accessToken, done) {
-					this._oauth2.get(meta.config['social:oauth:userProfileUrl'], accessToken, function(err, body, res) {
-						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
-
-						try {
-							var json = JSON.parse(body);
-
-							var profile = { provider: 'generic' };
-							// Alter this section to include whatever data is necessary
-							// NodeBB requires the following: id, displayName, emails, e.g.:
-							// profile.id = json.id;
-							// profile.displayName = json.name;
-							// profile.emails = [{ value: json.email }];
-
-							done(null, profile);
-						} catch(e) {
-							done(e);
-						}
-					});
-				};
-			}
-
-			passport.use('Generic OAuth', new passportOAuth(opts, function(token, secret, profile, done) {
-				OAuth.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
-					if (err) {
-						return done(err);
-					}
-					done(null, user);
-				});
-			}));
-
-			strategies.push({
-				name: 'Generic OAuth',
-				url: '/auth/oauth',
-				callbackURL: '/auth/generic/callback',
-				icon: 'check',
-				scope: (meta.config['social:oauth:scope'] || '').split(',')
-			});
-
-			return strategies;
-		} else {
-			winston.info('[plugins/sso-oauth] OAuth Disabled or misconfigured. Proceeding without Generic OAuth Login');
-			return strategies;
+	OAuth.init = function(app, middleware, controllers) {
+		function render(req, res, next) {
+			res.render('admin/plugins/sso-oauth', {});
 		}
+
+		app.get('/admin/plugins/sso-oauth', middleware.admin.buildHeader, render);
+		app.get('/api/admin/plugins/sso-oauth', render);
+
+		meta.settings.get('sso-oauth', function(err, settings) {
+			if (settings['oauth:type'] === '2') {
+				passportOAuth = require('passport-oauth').OAuth2Strategy;
+			} else if (settings['oauth:type'] === '1') {
+				passportOAuth = require('passport-oauth').OAuthStrategy;
+			}
+		});
+	};
+
+	OAuth.getStrategy = function(strategies, callback) {
+		meta.settings.get('sso-oauth', function(err, settings) {
+			var	oAuthKeys = ['oauth:reqTokenUrl', 'oauth:accessTokenUrl', 'oauth:authUrl', 'oauth:key', 'oauth:secret'],
+				oAuth2Keys = ['oauth2:authUrl', 'oauth2:tokenUrl', 'oauth2:id', 'oauth2:secret'],
+				configOk = oAuthKeys.every(function(key) {
+					return settings[key];
+				}) || oAuth2Keys.every(function(key) {
+					return settings[key];
+				}),
+				opts;
+
+			if (passportOAuth && configOk) {
+				if (settings['oauth:type'] === '1') {
+					// OAuth options
+					opts = {
+						requestTokenURL: settings['oauth:reqTokenUrl'],
+						accessTokenURL: settings['oauth:accessTokenUrl'],
+						userAuthorizationURL: settings['oauth:authUrl'],
+						consumerKey: settings['oauth:key'],
+						consumerSecret: settings['oauth:secret'],
+						callbackURL: nconf.get('url') + '/auth/generic/callback'
+					};
+
+					passportOAuth.Strategy.prototype.userProfile = function(token, secret, params, done) {
+						this._oauth.get(settings['oauth:userProfileUrl'], token, secret, function(err, body, res) {
+							if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
+
+							try {
+								var json = JSON.parse(body);
+
+								var profile = { provider: 'generic' };
+								// Uncomment the following lines to include whatever data is necessary
+								// NodeBB requires the following: id, displayName, emails, e.g.:
+								// profile.id = json.id;
+								// profile.displayName = json.name;
+								// profile.emails = [{ value: json.email }];
+
+								done(null, profile);
+							} catch(e) {
+								done(e);
+							}
+						});
+					};
+				} else if (settings['oauth:type'] === '2') {
+					// OAuth 2 options
+					opts = {
+						authorizationURL: settings['oauth2:authUrl'],
+						tokenURL: settings['oauth2:tokenUrl'],
+						clientID: settings['oauth2:id'],
+						clientSecret: settings['oauth2:secret'],
+						callbackURL: nconf.get('url') + '/auth/generic/callback'
+					};
+
+					passportOAuth.Strategy.prototype.userProfile = function(accessToken, done) {
+						this._oauth2.get(settings['oauth:userProfileUrl'], accessToken, function(err, body, res) {
+							if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
+
+							try {
+								var json = JSON.parse(body);
+
+								var profile = { provider: 'generic' };
+								// Alter this section to include whatever data is necessary
+								// NodeBB requires the following: id, displayName, emails, e.g.:
+
+								// profile.id = json.id;
+								// profile.displayName = json.name;
+								// profile.emails = [{ value: json.email }];
+
+								// Find out what is available by uncommenting this line:
+								// console.log(json);
+
+								// Delete or comment out the next TWO (2) lines when you are ready to proceed
+								console.log('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
+								return done(new Error('Congrats! So far so good -- please see server log for details'));
+
+								done(null, profile);
+							} catch(e) {
+								done(e);
+							}
+						});
+					};
+				}
+
+				passport.use('Generic OAuth', new passportOAuth(opts, function(token, secret, profile, done) {
+					OAuth.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
+						if (err) {
+							return done(err);
+						}
+						done(null, user);
+					});
+				}));
+
+				strategies.push({
+					name: 'Generic OAuth',
+					url: '/auth/oauth',
+					callbackURL: '/auth/generic/callback',
+					icon: 'check',
+					scope: (settings['oauth:scope'] || '').split(',')
+				});
+
+				callback(null, strategies);
+			} else {
+				winston.info('[plugins/sso-oauth] OAuth Disabled or misconfigured. Proceeding without Generic OAuth Login');
+				callback(null, strategies);
+			}
+		});
 	};
 
 	OAuth.login = function(oAuthid, handle, email, callback) {
@@ -177,15 +198,15 @@
 		});
 	};
 
-	OAuth.addMenuItem = function(custom_header) {
+	OAuth.addMenuItem = function(custom_header, callback) {
 		custom_header.authentication.push({
 			"route": constants.admin.route,
 			"icon": constants.admin.icon,
 			"name": constants.name
 		});
 
-		return custom_header;
-	}
+		callback(null, custom_header);
+	};
 
 	OAuth.addAdminRoute = function(custom_routes, callback) {
 		fs.readFile(path.resolve(__dirname, './static/admin.tpl'), function (err, template) {

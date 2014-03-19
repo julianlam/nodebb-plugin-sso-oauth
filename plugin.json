@@ -5,14 +5,10 @@
 	"url": "https://github.com/julianlam/nodebb-plugin-sso-oauth",
 	"library": "./library.js",
 	"hooks": [
-		{
-			"hook": "filter:auth.init", "method": "getStrategy", "callbacked": false
-		},
-		{
-			"hook": "filter:admin.header.build", "method": "addMenuItem", "callbacked": false
-		},
-		{
-			"hook": "filter:admin.create_routes", "method": "addAdminRoute", "callbacked": true
-		}
-	]
+		{ "hook": "action:app.load", "method": "init" },
+		{ "hook": "filter:auth.init", "method": "getStrategy" },
+		{ "hook": "filter:admin.header.build", "method": "addMenuItem" }
+	],
+	"templates": "./templates",
+	"minver": "0.4.0"
 }

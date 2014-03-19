@@ -28,18 +28,16 @@
 
 		app.get('/admin/plugins/sso-oauth', middleware.admin.buildHeader, render);
 		app.get('/api/admin/plugins/sso-oauth', render);
-
-		meta.settings.get('sso-oauth', function(err, settings) {
-			if (settings['oauth:type'] === '2') {
-				passportOAuth = require('passport-oauth').OAuth2Strategy;
-			} else if (settings['oauth:type'] === '1') {
-				passportOAuth = require('passport-oauth').OAuthStrategy;
-			}
-		});
 	};
 
 	OAuth.getStrategy = function(strategies, callback) {
 		meta.settings.get('sso-oauth', function(err, settings) {
+			if (err) {
+				winston.error('[plugins/sso-oauth] Could not retrieve OAuth settings: ' + err.message);
+			} else if (!settings) {
+				settings = {};
+			}
+
 			var	oAuthKeys = ['oauth:reqTokenUrl', 'oauth:accessTokenUrl', 'oauth:authUrl', 'oauth:key', 'oauth:secret'],
 				oAuth2Keys = ['oauth2:authUrl', 'oauth2:tokenUrl', 'oauth2:id', 'oauth2:secret'],
 				configOk = oAuthKeys.every(function(key) {
@@ -48,6 +46,12 @@
 					return settings[key];
 				}),
 				opts;
+
+			if (settings['oauth:type'] === '2') {
+				passportOAuth = require('passport-oauth').OAuth2Strategy;
+			} else if (settings['oauth:type'] === '1') {
+				passportOAuth = require('passport-oauth').OAuthStrategy;
+			}
 
 			if (passportOAuth && configOk) {
 				if (settings['oauth:type'] === '1') {
@@ -102,16 +106,16 @@
 								// Alter this section to include whatever data is necessary
 								// NodeBB requires the following: id, displayName, emails, e.g.:
 
-								// profile.id = json.id;
-								// profile.displayName = json.name;
-								// profile.emails = [{ value: json.email }];
+								profile.id = json.id;
+								profile.displayName = json.name;
+								profile.emails = [{ value: json.email }];
 
 								// Find out what is available by uncommenting this line:
 								// console.log(json);
 
 								// Delete or comment out the next TWO (2) lines when you are ready to proceed
-								console.log('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-								return done(new Error('Congrats! So far so good -- please see server log for details'));
+								// console.log('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
+								// return done(new Error('Congrats! So far so good -- please see server log for details'));
 
 								done(null, profile);
 							} catch(e) {

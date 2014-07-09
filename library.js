@@ -232,5 +232,27 @@
 		});
 	};
 
+	OAuth.deleteUserData = function(uid) {
+		db.getObject('oAuthid:uid', function(err, oAuthData) {
+			if (err) {
+				winston.error('Could not fetch OAuthId data from Redis. Error: ' + err);
+			}
+			var oAuthIdToDelete;
+			for (var oAuthId in oAuthData) {
+				if (oAuthData.hasOwnProperty(oAuthId) && oAuthData[oAuthId] === uid) {
+					oAuthIdToDelete = oAuthId;
+				}
+			}
+			if (typeof oAuthIdToDelete !== 'undefined') {
+				// Delete the oAuthId-to-uid mapping for the user
+				db.deleteObjectField('oAuthid:uid', oAuthIdToDelete, function(err, numDeletes) {
+					if (err) {
+						winston.error('Could not remove OAuthId data for uid ' + uid + '. Error: ' + err);
+					}
+				});
+			}
+		});
+	};
+
 	module.exports = OAuth;
 }(module));

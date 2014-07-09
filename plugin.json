@@ -6,6 +6,7 @@
 	"library": "./library.js",
 	"hooks": [
 		{ "hook": "action:app.load", "method": "init" },
+		{ "hook": "action:user.delete", "method": "deleteUserData" },
 		{ "hook": "filter:auth.init", "method": "getStrategy" },
 		{ "hook": "filter:admin.header.build", "method": "addMenuItem" }
 	],

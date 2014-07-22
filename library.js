@@ -10,6 +10,7 @@
 		path = module.parent.require('path'),
 		nconf = module.parent.require('nconf'),
 		winston = module.parent.require('winston'),
+		async = module.parent.require('async'),
 		passportOAuth;
 
 	var constants = Object.freeze({
@@ -253,6 +254,21 @@
 			});
 
 			callback(null, custom_routes);
+		});
+	};
+
+	OAuth.deleteUserData = function(uid, callback) {
+		async.waterfall([
+			async.apply(User.getUserField, uid, 'oAuthid'),
+			function(oAuthIdToDelete, next) {
+				db.deleteObjectField('oAuthid:uid', oAuthIdToDelete, next);
+			}
+		], function(err) {
+			if (err) {
+				winston.error('Could not remove OAuthId data for uid ' + uid + '. Error: ' + err);
+				return callback(err);
+			}
+			callback();
 		});
 	};
 

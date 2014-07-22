@@ -2,6 +2,7 @@
 	"use strict";
 
 	var User = module.parent.require('./user'),
+		Groups = module.parent.require('./groups'),
 		meta = module.parent.require('./meta'),
 		db = module.parent.require('../src/database'),
 		passport = module.parent.require('passport'),
@@ -21,13 +22,15 @@
 
 	var OAuth = {};
 
-	OAuth.init = function(app, middleware, controllers) {
+	OAuth.init = function(app, middleware, controllers, callback) {
 		function render(req, res, next) {
 			res.render('admin/plugins/sso-oauth', {});
 		}
 
 		app.get('/admin/plugins/sso-oauth', middleware.admin.buildHeader, render);
 		app.get('/api/admin/plugins/sso-oauth', render);
+
+		callback();
 	};
 
 	OAuth.getStrategy = function(strategies, callback) {
@@ -104,18 +107,22 @@
 
 								var profile = { provider: 'generic' };
 								// Alter this section to include whatever data is necessary
-								// NodeBB requires the following: id, displayName, emails, e.g.:
+								// NodeBB *requires* the following: id, displayName, emails.
+								// Everything else is optional.
 
 								profile.id = json.id;
 								profile.displayName = json.name;
 								profile.emails = [{ value: json.email }];
 
+								// Do you want to automatically make somebody an admin? This block might help you do that...
+								// profile.isAdmin = json.isAdmin ? true : false;
+
 								// Find out what is available by uncommenting this line:
 								// console.log(json);
 
 								// Delete or comment out the next TWO (2) lines when you are ready to proceed
-								// console.log('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-								// return done(new Error('Congrats! So far so good -- please see server log for details'));
+								process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
+								return done(new Error('Congrats! So far so good -- please see server log for details'));
 
 								done(null, profile);
 							} catch(e) {
@@ -126,7 +133,12 @@
 				}
 
 				passport.use('Generic OAuth', new passportOAuth(opts, function(token, secret, profile, done) {
-					OAuth.login(profile.id, profile.displayName, profile.emails[0].value, function(err, user) {
+					OAuth.login({
+						oAuthid: profile.id,
+						handle: profile.displayName,
+						email: profile.emails[0].value,
+						isAdmin: profile.isAdmin
+					}, function(err, user) {
 						if (err) {
 							return done(err);
 						}
@@ -150,8 +162,8 @@
 		});
 	};
 
-	OAuth.login = function(oAuthid, handle, email, callback) {
-		OAuth.getUidByOAuthid(oAuthid, function(err, uid) {
+	OAuth.login = function(payload, callback) {
+		OAuth.getUidByOAuthid(payload.oAuthid, function(err, uid) {
 			if(err) {
 				return callback(err);
 			}
@@ -165,20 +177,32 @@
 				// New User
 				var success = function(uid) {
 					// Save provider-specific information to the user
-					User.setUserField(uid, 'oAuthid', oAuthid);
-					db.setObjectField('oAuthid:uid', oAuthid, uid);
-					callback(null, {
-						uid: uid
-					});
+					User.setUserField(uid, 'oAuthid', payload.oAuthid);
+					db.setObjectField('oAuthid:uid', payload.oAuthid, uid);
+
+					if (payload.isAdmin) {
+						Groups.join('administrators', uid, function(err) {
+							callback(null, {
+								uid: uid
+							});
+						});
+					} else {
+						callback(null, {
+							uid: uid
+						});
+					}
 				};
 
-				User.getUidByEmail(email, function(err, uid) {
+				User.getUidByEmail(payload.email, function(err, uid) {
 					if(err) {
 						return callback(err);
 					}
 
 					if (!uid) {
-						User.create({username: handle, email: email}, function(err, uid) {
+						User.create({
+							username: payload.handle,
+							email: payload.email
+						}, function(err, uid) {
 							if(err) {
 								return callback(err);
 							}

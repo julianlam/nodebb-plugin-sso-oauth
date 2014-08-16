@@ -58,7 +58,7 @@
 
 						try {
 							var json = JSON.parse(body);
-							OAuth.parseUserReturn(body, function(err, profile) {
+							OAuth.parseUserReturn(json, function(err, profile) {
 								if (err) return done(err);
 								profile.provider = constants.name;
 								done(null, profile);
@@ -79,7 +79,7 @@
 
 						try {
 							var json = JSON.parse(body);
-							OAuth.parseUserReturn(body, function(err, profile) {
+							OAuth.parseUserReturn(json, function(err, profile) {
 								if (err) return done(err);
 								profile.provider = constants.name;
 								done(null, profile);

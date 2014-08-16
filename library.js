@@ -1,6 +1,21 @@
 (function(module) {
 	"use strict";
 
+	/*
+		Welcome to the SSO OAuth plugin! If you're inspecting this code, you're probably looking to
+		hook up NodeBB with your existing OAuth endpoint.
+
+		Step 1: Fill in the "constants" section below with the requisite informaton. Either the "oauth"
+				or "oauth2" section needs to be filled, depending on what you set "type" to.
+
+		Step 2: Give it a whirl. If you see the congrats message, you're doing well so far!
+
+		Step 3: Customise the `parseUserReturn` method to normalise your user route's data return into
+				a format accepted by NodeBB. Instructions are provided there. (Line 137)
+
+		Step 4: If all goes well, you'll be able to login/register via your OAuth endpoint credentials.
+	*/
+
 	var User = module.parent.require('./user'),
 		Groups = module.parent.require('./groups'),
 		meta = module.parent.require('./meta'),
@@ -28,15 +43,15 @@
 				clientID: '',
 				clientSecret: ''
 			},
-			userRoute: ''
+			userRoute: ''	// This is the address to your app's "user profile" API endpoint (expects JSON)
 		}),
 		configOk = false,
 		OAuth = {}, passportOAuth, opts;
 
 	if (!constants.name) {
-		winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:17)');
+		winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:32)');
 	} else if (!constants.type || (constants.type !== 'oauth' && constants.type !== 'oauth2')) {
-		winston.error('[sso-oauth] Please specify an OAuth strategy to utilise (library.js:16)');
+		winston.error('[sso-oauth] Please specify an OAuth strategy to utilise (library.js:31)');
 	} else if (!constants.userRoute) {
 		winston.error('[sso-oauth] User Route required (library.js:31)');
 	} else {

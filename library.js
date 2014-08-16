@@ -27,22 +27,21 @@
 				tokenURL: '',
 				clientID: '',
 				clientSecret: ''
-			}
+			},
+			userRoute: ''
 		}),
 		configOk = false,
-		OAuth = {}, passportOAuth;
+		OAuth = {}, passportOAuth, opts;
 
-	OAuth.init = function(app, middleware, controller, callback) {
-		if (!constants.name) {
-			winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:17)');
-		} else if (!constants.type || (constants.type !== 'oauth' && constants.type !== 'oauth2')) {
-			winston.error('[sso-oauth] Please specify an OAuth strategy to utilise (library.js:16)');
-		} else {
-			configOk = true;
-		}
-
-		callback();
-	};
+	if (!constants.name) {
+		winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:17)');
+	} else if (!constants.type || (constants.type !== 'oauth' && constants.type !== 'oauth2')) {
+		winston.error('[sso-oauth] Please specify an OAuth strategy to utilise (library.js:16)');
+	} else if (!constants.userRoute) {
+		winston.error('[sso-oauth] User Route required (library.js:31)');
+	} else {
+		configOk = true;
+	}
 
 	OAuth.getStrategy = function(strategies, callback) {
 		if (configOk) {
@@ -51,15 +50,18 @@
 			if (constants.type === 'oauth') {
 				// OAuth options
 				opts = constants.oauth;
+				opts.callbackURL = nconf.get('url') + '/auth/' + constants.name + '/callback';
 
 				passportOAuth.Strategy.prototype.userProfile = function(token, secret, params, done) {
-					this._oauth.get(settings['oauth:userProfileUrl'], token, secret, function(err, body, res) {
+					this._oauth.get(constants.userRoute, token, secret, function(err, body, res) {
 						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
 
 						try {
 							var json = JSON.parse(body);
 							OAuth.parseUserReturn(body, function(err, profile) {
-								profile.provider = constants.name
+								if (err) return done(err);
+								profile.provider = constants.name;
+								done(null, profile);
 							});
 						} catch(e) {
 							done(e);
@@ -68,17 +70,19 @@
 				};
 			} else if (constants.type === 'oauth2') {
 				// OAuth 2 options
-				opts = constants.settings.oauth2;
+				opts = constants.oauth2;
 				opts.callbackURL = nconf.get('url') + '/auth/' + constants.name + '/callback';
 
 				passportOAuth.Strategy.prototype.userProfile = function(accessToken, done) {
-					this._oauth2.get(settings['oauth:userProfileUrl'], accessToken, function(err, body, res) {
+					this._oauth2.get(constants.userRoute, accessToken, function(err, body, res) {
 						if (err) { return done(new InternalOAuthError('failed to fetch user profile', err)); }
 
 						try {
 							var json = JSON.parse(body);
 							OAuth.parseUserReturn(body, function(err, profile) {
-								profile.provider = constants.name
+								if (err) return done(err);
+								profile.provider = constants.name;
+								done(null, profile);
 							});
 						} catch(e) {
 							done(e);
@@ -105,7 +109,7 @@
 				name: constants.name,
 				url: '/auth/' + constants.name,
 				callbackURL: '/auth/' + constants.name + '/callback',
-				icon: 'check',
+				icon: 'fa-check-square',
 				scope: (constants.scope || '').split(',')
 			});
 
@@ -133,9 +137,9 @@
 
 		// Delete or comment out the next TWO (2) lines when you are ready to proceed
 		process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-		return done(new Error('Congrats! So far so good -- please see server log for details'));
+		return callback(new Error('Congrats! So far so good -- please see server log for details'));
 
-		done(null, profile);
+		callback(null, profile);
 	}
 
 	OAuth.login = function(payload, callback) {
@@ -200,16 +204,6 @@
 			}
 			callback(null, uid);
 		});
-	};
-
-	OAuth.addMenuItem = function(custom_header, callback) {
-		custom_header.authentication.push({
-			"route": constants.admin.route,
-			"icon": constants.admin.icon,
-			"name": constants.name
-		});
-
-		callback(null, custom_header);
 	};
 
 	OAuth.deleteUserData = function(uid, callback) {

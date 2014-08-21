@@ -11,8 +11,10 @@
     "nodebb",
     "plugin",
     "oauth",
+    "oauth2",
     "sso",
     "single sign on",
+    "login",
     "registration"
   ],
   "author": {

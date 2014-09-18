@@ -232,7 +232,7 @@
 				winston.error('[sso-oauth] Could not remove OAuthId data for uid ' + uid + '. Error: ' + err);
 				return callback(err);
 			}
-			callback();
+			callback(null, uid);
 		});
 	};
 

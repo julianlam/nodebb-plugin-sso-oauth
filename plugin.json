@@ -7,6 +7,5 @@
 	"hooks": [
 		{ "hook": "filter:user.delete", "method": "deleteUserData" },
 		{ "hook": "filter:auth.init", "method": "getStrategy" }
-	],
-	"minver": "0.5.0"
+	]
 }

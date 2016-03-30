@@ -25,9 +25,11 @@
 		path = module.parent.require('path'),
 		nconf = module.parent.require('nconf'),
 		winston = module.parent.require('winston'),
-		async = module.parent.require('async'),
+		async = module.parent.require('async');
 
-		constants = Object.freeze({
+	var authenticationController = module.parent.require('./controllers/authentication');
+
+	var constants = Object.freeze({
 			type: '',	// Either 'oauth' or 'oauth2'
 			name: '',	// Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
 			oauth: {
@@ -76,6 +78,8 @@
 							OAuth.parseUserReturn(json, function(err, profile) {
 								if (err) return done(err);
 								profile.provider = constants.name;
+
+								authenticationController.onSuccessfulLogin(req, user.uid);
 								done(null, profile);
 							});
 						} catch(e) {
@@ -97,6 +101,8 @@
 							OAuth.parseUserReturn(json, function(err, profile) {
 								if (err) return done(err);
 								profile.provider = constants.name;
+
+								authenticationController.onSuccessfulLogin(req, user.uid);
 								done(null, profile);
 							});
 						} catch(e) {

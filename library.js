@@ -79,7 +79,6 @@
 								if (err) return done(err);
 								profile.provider = constants.name;
 
-								authenticationController.onSuccessfulLogin(req, user.uid);
 								done(null, profile);
 							});
 						} catch(e) {
@@ -102,7 +101,6 @@
 								if (err) return done(err);
 								profile.provider = constants.name;
 
-								authenticationController.onSuccessfulLogin(req, user.uid);
 								done(null, profile);
 							});
 						} catch(e) {
@@ -112,7 +110,9 @@
 				};
 			}
 
-			passport.use(constants.name, new passportOAuth(opts, function(token, secret, profile, done) {
+			opts.passReqToCallback = true;
+
+			passport.use(constants.name, new passportOAuth(opts, function(req, token, secret, profile, done) {
 				OAuth.login({
 					oAuthid: profile.id,
 					handle: profile.displayName,
@@ -122,6 +122,8 @@
 					if (err) {
 						return done(err);
 					}
+
+					authenticationController.onSuccessfulLogin(req, user.uid);
 					done(null, user);
 				});
 			}));

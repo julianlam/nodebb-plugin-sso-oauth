@@ -11,7 +11,7 @@
 		Step 2: Give it a whirl. If you see the congrats message, you're doing well so far!
 
 		Step 3: Customise the `parseUserReturn` method to normalise your user route's data return into
-				a format accepted by NodeBB. Instructions are provided there. (Line 137)
+				a format accepted by NodeBB. Instructions are provided there. (Line 146)
 
 		Step 4: If all goes well, you'll be able to login/register via your OAuth endpoint credentials.
 	*/

@@ -5,7 +5,7 @@
 	"url": "https://github.com/julianlam/nodebb-plugin-sso-oauth",
 	"library": "./library.js",
 	"hooks": [
-		{ "hook": "filter:user.delete", "method": "deleteUserData" },
+		{ "hook": "static:user.delete", "method": "deleteUserData" },
 		{ "hook": "filter:auth.init", "method": "getStrategy" }
 	]
 }

@@ -29,6 +29,25 @@
 
 	var authenticationController = module.parent.require('./controllers/authentication');
 
+	/**
+	 * REMEMBER
+	 *   Never save your OAuth Key/Secret or OAuth2 ID/Secret pair in code! It could be published and leaked accidentally.
+	 *   Save it into your config.json file instead:
+	 *
+	 *   {
+	 *     ...
+	 *     "oauth": {
+	 *       "id": "someoauthid",
+	 *       "secret": "youroauthsecret"
+	 *     }
+	 *     ...
+	 *   }
+	 *
+	 *   ... or use environment variables instead:
+	 *
+	 *   `OAUTH__ID=someoauthid OAUTH__SECRET=youroauthsecret node app.js`
+	 */
+
 	var constants = Object.freeze({
 			type: '',	// Either 'oauth' or 'oauth2'
 			name: '',	// Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
@@ -36,14 +55,14 @@
 				requestTokenURL: '',
 				accessTokenURL: '',
 				userAuthorizationURL: '',
-				consumerKey: '',
-				consumerSecret: ''
+				consumerKey: nconf.get('oauth:key'),	// don't change this line
+				consumerSecret: nconf.get('oauth:secret'),	// don't change this line
 			},
 			oauth2: {
 				authorizationURL: '',
 				tokenURL: '',
-				clientID: '',
-				clientSecret: ''
+				clientID: nconf.get('oauth:id'),	// don't change this line
+				clientSecret: nconf.get('oauth:secret'),	// don't change this line
 			},
 			userRoute: ''	// This is the address to your app's "user profile" API endpoint (expects JSON)
 		}),

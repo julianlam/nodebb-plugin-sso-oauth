@@ -264,5 +264,11 @@
 		});
 	};
 
+  // If this filter is not there, the deleteUserData function will fail when getting the metryId for deletion.
+  OAuth.whitelistFields = function(params, callback) {
+    params.whitelist.push(constants.name + 'Id');
+    callback(null, params);
+  };
+
 	module.exports = OAuth;
 }(module));

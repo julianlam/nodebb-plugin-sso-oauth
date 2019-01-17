@@ -14,4 +14,6 @@ NodeBB Plugin that allows users to login/register via any configured OAuth provi
 
 ## Trouble?
 
+The NodeBB team builds out SSO plugins for a nominal fee. [Reach out to us for a quote.](mailto:sales@nodebb.org)
+
 Find us on [the community forums](http://community.nodebb.org)!

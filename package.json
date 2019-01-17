@@ -28,6 +28,7 @@
   "readme": "",
   "readmeFilename": "README.md",
   "dependencies": {
+    "async": "^2.6.1",
     "passport-oauth": "~1.0.0"
   },
   "nbbpm": {

@@ -27,7 +27,6 @@
 	const nconf = module.parent.require('nconf');
 	const winston = module.parent.require('winston');
 
-
 	/**
 	 * REMEMBER
 	 *   Never save your OAuth Key/Secret or OAuth2 ID/Secret pair in code! It could be published and leaked accidentally.
@@ -47,7 +46,7 @@
 	 *   `OAUTH__ID=someoauthid OAUTH__SECRET=youroauthsecret node app.js`
 	 */
 
-	var constants = Object.freeze({
+	const constants = Object.freeze({
 		type: '',	// Either 'oauth' or 'oauth2'
 		name: '',	// Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
 		oauth: {
@@ -66,12 +65,10 @@
 		userRoute: '',	// This is the address to your app's "user profile" API endpoint (expects JSON)
 	});
 
-
-	var configOk = false;
-
-
-	var OAuth = {}; var passportOAuth; var
-		opts;
+	const OAuth = {};
+	let configOk = false;
+	let passportOAuth;
+	let opts;
 
 	if (!constants.name) {
 		winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:32)');

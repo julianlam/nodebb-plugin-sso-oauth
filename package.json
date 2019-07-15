@@ -1,6 +1,6 @@
 {
   "name": "nodebb-plugin-sso-oauth",
-  "version": "0.3.3",
+  "version": "0.3.4",
   "description": "NodeBB Generic OAuth SSO",
   "main": "library.js",
   "repository": {

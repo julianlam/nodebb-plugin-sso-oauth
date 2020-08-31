@@ -28,7 +28,8 @@
   "readme": "",
   "readmeFilename": "README.md",
   "dependencies": {
-    "async": "^2",
+    "async": "^3.2.0",
+    "eslint": "^7.7.0",
     "passport-oauth": "~1.0.0"
   },
   "nbbpm": {
@@ -36,9 +37,7 @@
     "index": false
   },
   "devDependencies": {
-    "@commitlint/cli": "^8.3.5",
     "@commitlint/config-angular": "^8.3.4",
-    "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.1",
     "husky": "^4.2.3",

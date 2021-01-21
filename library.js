@@ -136,20 +136,16 @@
 
 			opts.passReqToCallback = true;
 
-			passport.use(constants.name, new passportOAuth(opts, function (req, token, secret, profile, done) {
-				OAuth.login({
+			passport.use(constants.name, new passportOAuth(opts, async (req, token, secret, profile, done) => {
+				const user = await OAuth.login({
 					oAuthid: profile.id,
 					handle: profile.displayName,
 					email: profile.emails[0].value,
 					isAdmin: profile.isAdmin,
-				}, function (err, user) {
-					if (err) {
-						return done(err);
-					}
-
-					authenticationController.onSuccessfulLogin(req, user.uid);
-					done(null, user);
 				});
+
+				authenticationController.onSuccessfulLogin(req, user.uid);
+				done(null, user);
 			}));
 
 			strategies.push({
@@ -190,69 +186,39 @@
 		callback(null, profile);
 	};
 
-	OAuth.login = function (payload, callback) {
-		OAuth.getUidByOAuthid(payload.oAuthid, function (err, uid) {
-			if (err) {
-				return callback(err);
-			}
+	OAuth.login = async (payload) => {
+		let uid = await OAuth.getUidByOAuthid(payload.oAuthid);
+		if (uid !== null) {
+			// Existing User
+			return ({
+				uid: uid,
+			});
+		}
 
-			if (uid !== null) {
-				// Existing User
-				callback(null, {
-					uid: uid,
-				});
-			} else {
-				// New User
-				var success = function (uid) {
-					// Save provider-specific information to the user
-					User.setUserField(uid, constants.name + 'Id', payload.oAuthid);
-					db.setObjectField(constants.name + 'Id:uid', payload.oAuthid, uid);
+		// Check for user via email fallback
+		uid = await User.getUidByEmail(payload.email);
+		if (!uid) {
+			// New user
+			uid = await User.create({
+				username: payload.handle,
+				email: payload.email,
+			});
+		}
 
-					if (payload.isAdmin) {
-						Groups.join('administrators', uid, function (err) {
-							callback(err, {
-								uid: uid,
-							});
-						});
-					} else {
-						callback(null, {
-							uid: uid,
-						});
-					}
-				};
+		// Save provider-specific information to the user
+		await User.setUserField(uid, constants.name + 'Id', payload.oAuthid);
+		await db.setObjectField(constants.name + 'Id:uid', payload.oAuthid, uid);
 
-				User.getUidByEmail(payload.email, function (err, uid) {
-					if (err) {
-						return callback(err);
-					}
+		if (payload.isAdmin) {
+			await Groups.join('administrators', uid);
+		}
 
-					if (!uid) {
-						User.create({
-							username: payload.handle,
-							email: payload.email,
-						}, function (err, uid) {
-							if (err) {
-								return callback(err);
-							}
-
-							success(uid);
-						});
-					} else {
-						success(uid); // Existing account -- merge
-					}
-				});
-			}
-		});
+		return {
+			uid: uid,
+		};
 	};
 
-	OAuth.getUidByOAuthid = function (oAuthid, callback) {
-		db.getObjectField(constants.name + 'Id:uid', oAuthid, function (err, uid) {
-			if (err) {
-				return callback(err);
-			}
-			callback(null, uid);
-		});
-	};
+	OAuth.getUidByOAuthid = async (oAuthid) => db.getObjectField(constants.name + 'Id:uid', oAuthid);
 
 	OAuth.deleteUserData = function (data, callback) {
 		async.waterfall([

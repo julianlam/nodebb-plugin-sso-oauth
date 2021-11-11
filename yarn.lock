@@ -18,17 +18,17 @@
     esutils "^2.0.2"
     js-tokens "^4.0.0"
 
-"@commitlint/config-angular-type-enum@^8.3.4":
-  version "8.3.4"
-  resolved "https://registry.yarnpkg.com/@commitlint/config-angular-type-enum/-/config-angular-type-enum-8.3.4.tgz#2ccc316ed072935c71e0abae916a72f70e43feae"
-  integrity sha512-V8DJ9G3vd8/g55euhwqNPv9gycqbNGfJsswpga7RP0tetzcekkXeE9fXnFBJklqzXrjwUmP8Of5eEsGmbt39IQ==
+"@commitlint/config-angular-type-enum@^14.0.0":
+  version "14.0.0"
+  resolved "https://registry.yarnpkg.com/@commitlint/config-angular-type-enum/-/config-angular-type-enum-14.0.0.tgz#29f05fc212b4320e11b1a6bf538d68bba7178464"
+  integrity sha512-c4MX+h4+8TmqELehb6IJfGQ7v/Wp07OfJQpnSnUPksHskjCkojrVnX3JI9Z5BtK7KQHCzJlI6j1CcvehnLSzWw==
 
-"@commitlint/config-angular@8.3.4":
-  version "8.3.4"
-  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-8.3.4.tgz#cea40e8184d36648eb09f9f7c8eefd92ab14f205"
-  integrity sha512-mFg1Yj2xFDBJJyltGP3RLqZOk89HuNK1ttOcRA9lsTjTVVu4MrNv5sQ1LkW645xn4Vy9zgxlB0CrR4LXEg5QpQ==
+"@commitlint/config-angular@14.1.0":
+  version "14.1.0"
+  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-14.1.0.tgz#0ddfb7c0eb83c44ef6f2c35b9444649eb639bd8a"
+  integrity sha512-LuI3W0uUR12LAqL9AEtbf+AfvkUzRkzkp/C1//Q7t0nC4+BXrN4MtF0V8B5VHeEqBdVqDzL1w0B1G446OrZmCA==
   dependencies:
-    "@commitlint/config-angular-type-enum" "^8.3.4"
+    "@commitlint/config-angular-type-enum" "^14.0.0"
 
 "@eslint/eslintrc@^1.0.4":
   version "1.0.4"

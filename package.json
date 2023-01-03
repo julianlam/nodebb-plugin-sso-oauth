@@ -40,7 +40,7 @@
     "@commitlint/config-angular": "15.0.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-plugin-import": "2.26.0",
-    "husky": "8.0.2",
+    "husky": "8.0.3",
     "lint-staged": "13.1.0"
   },
   "husky": {

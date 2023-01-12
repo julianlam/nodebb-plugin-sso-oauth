@@ -39,7 +39,7 @@
   "devDependencies": {
     "@commitlint/config-angular": "15.0.0",
     "eslint-config-airbnb-base": "15.0.0",
-    "eslint-plugin-import": "2.27.2",
+    "eslint-plugin-import": "2.27.4",
     "husky": "8.0.3",
     "lint-staged": "13.1.0"
   },

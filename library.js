@@ -208,11 +208,23 @@
 		// Check for user via email fallback
 		uid = await User.getUidByEmail(payload.email);
 		if (!uid) {
+			/**
+			 * The email retrieved from the user profile might not be trusted.
+			 * Only you would know — it's up to you to decide whether or not to:
+			 *   - Send the welcome email which prompts for verification (default)
+			 *   - Bypass the welcome email and automatically verify the email (commented out, below)
+			 */
+			const { email } = payload;
+
 			// New user
 			uid = await User.create({
 				username: payload.handle,
-				email: payload.email,
+				email, // if you uncomment the block below, comment this line out
 			});
+
+			// Automatically confirm user email
+			// await User.setUserField(uid, 'email', email);
+			// await UserEmail.confirmByUid(uid);
 		}
 
 		// Save provider-specific information to the user

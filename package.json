@@ -29,7 +29,8 @@
   "readmeFilename": "README.md",
   "dependencies": {
     "async": "^3.2.0",
-    "passport-oauth": "~1.0.0"
+    "passport-oauth": "~1.0.0",
+    "passport-azure-ad": "^4.3.1"
   },
   "nbbpm": {
     "compatibility": "^1.0.1",

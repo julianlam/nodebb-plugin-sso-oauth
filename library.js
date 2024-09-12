@@ -22,7 +22,7 @@ const authenticationController = require.main.require('./src/controllers/authent
 
 const async = require('async');
 
-const passport = require.main.require('passport');
+const AzureAdOAuth2Strategy = require('passport-azure-ad').OAuth2Strategy;
 const nconf = require.main.require('nconf');
 const winston = require.main.require('winston');
 
@@ -46,27 +46,19 @@ const winston = require.main.require('winston');
 	 */
 
 const constants = Object.freeze({
-	type: '', // Either 'oauth' or 'oauth2'
-	name: '', // Something unique to your OAuth provider in lowercase, like "github", or "nodebb"
-	oauth: {
-		requestTokenURL: '',
-		accessTokenURL: '',
-		userAuthorizationURL: '',
-		consumerKey: nconf.get('oauth:key'), // don't change this line
-		consumerSecret: nconf.get('oauth:secret'), // don't change this line
-	},
-	oauth2: {
-		authorizationURL: '',
-		tokenURL: '',
-		clientID: nconf.get('oauth:id'), // don't change this line
-		clientSecret: nconf.get('oauth:secret'), // don't change this line
-	},
-	userRoute: '', // This is the address to your app's "user profile" API endpoint (expects JSON)
+    type: 'oauth2',
+    name: 'azuread',
+    oauth2: {
+        authorizationURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
+        tokenURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
+        clientID: nconf.get('oauth:id'),
+        clientSecret: nconf.get('oauth:secret'),
+    },
+    userRoute: 'https://graph.microsoft.com/v1.0/me',
 });
 
 const OAuth = {};
 let configOk = false;
-let passportOAuth;
 let opts;
 
 if (!constants.name) {
@@ -81,86 +73,53 @@ if (!constants.name) {
 
 OAuth.getStrategy = function (strategies, callback) {
 	if (configOk) {
-		passportOAuth = require('passport-oauth')[constants.type === 'oauth' ? 'OAuthStrategy' : 'OAuth2Strategy'];
+        opts = {
+            clientID: constants.oauth2.clientID,
+            clientSecret: constants.oauth2.clientSecret,
+            callbackURL: `${nconf.get('url')}/auth/${constants.name}/callback`,
+            resource: 'https://graph.microsoft.com',
+            tenant: 'common',
+            authorizationURL: constants.oauth2.authorizationURL,
+            tokenURL: constants.oauth2.tokenURL,
+            passReqToCallback: true,
+        };
 
-		if (constants.type === 'oauth') {
-			// OAuth options
-			opts = constants.oauth;
-			opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
+        passport.use(constants.name, new AzureAdOAuth2Strategy(opts, async (req, accessToken, refreshToken, params, profile, done) => {
+            const graphClient = require('@microsoft/microsoft-graph-client').Client.init({
+                authProvider: (done) => {
+                    done(null, accessToken);
+                }
+            });
 
-			passportOAuth.Strategy.prototype.userProfile = function (token, secret, params, done) {
-				// If your OAuth provider requires the access token to be sent in the query  parameters
-				// instead of the request headers, comment out the next line:
-				this._oauth._useAuthorizationHeaderForGET = true;
+            try {
+                const user = await graphClient.api('/me').get();
+                OAuth.parseUserReturn(user, (err, profile) => {
+                    if (err) return done(err);
+                    profile.provider = constants.name;
 
-				this._oauth.get(constants.userRoute, token, secret, (err, body/* , res */) => {
-					if (err) {
-						return done(err);
-					}
-
-					try {
-						const json = JSON.parse(body);
-						OAuth.parseUserReturn(json, (err, profile) => {
-							if (err) return done(err);
-							profile.provider = constants.name;
-
-							done(null, profile);
-						});
-					} catch (e) {
-						done(e);
-					}
-				});
-			};
-		} else if (constants.type === 'oauth2') {
-			// OAuth 2 options
-			opts = constants.oauth2;
-			opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
-
-			passportOAuth.Strategy.prototype.userProfile = function (accessToken, done) {
-				// If your OAuth provider requires the access token to be sent in the query  parameters
-				// instead of the request headers, comment out the next line:
-				this._oauth2._useAuthorizationHeaderForGET = true;
-
-				this._oauth2.get(constants.userRoute, accessToken, (err, body/* , res */) => {
-					if (err) {
-						return done(err);
-					}
-
-					try {
-						const json = JSON.parse(body);
-						OAuth.parseUserReturn(json, (err, profile) => {
-							if (err) return done(err);
-							profile.provider = constants.name;
-
-							done(null, profile);
-						});
-					} catch (e) {
-						done(e);
-					}
-				});
-			};
-		}
-
-		opts.passReqToCallback = true;
-
-		passport.use(constants.name, new passportOAuth(opts, async (req, token, secret, profile, done) => {
-			const user = await OAuth.login({
-				oAuthid: profile.id,
-				handle: profile.displayName,
-				email: profile.emails[0].value,
-				isAdmin: profile.isAdmin,
-			});
-
-			authenticationController.onSuccessfulLogin(req, user.uid);
-			done(null, user);
-		}));
+                    OAuth.login({
+                        oAuthid: profile.id,
+                        handle: profile.displayName,
+                        email: profile.emails[0].value,
+                        isAdmin: false,
+                    }).then((user) => {
+                        authenticationController.onSuccessfulLogin(req, user.uid);
+                        done(null, user);
+                    }).catch((err) => {
+                        done(err);
+                    });
+                });
+            } catch (err) {
+                done(err);
+            }
+        }));
 
 		strategies.push({
 			name: constants.name,
 			url: `/auth/${constants.name}`,
 			callbackURL: `/auth/${constants.name}/callback`,
-			icon: 'fa-check-square',
-			scope: (constants.scope || '').split(','),
+			icon: 'fa-windows',
+			scope: ['openid', 'profile', 'email', 'User.Read'],
 		});
 
 		callback(null, strategies);
@@ -170,27 +129,12 @@ OAuth.getStrategy = function (strategies, callback) {
 };
 
 OAuth.parseUserReturn = function (data, callback) {
-	// Alter this section to include whatever data is necessary
-	// NodeBB *requires* the following: id, displayName, emails.
-	// Everything else is optional.
+    const profile = {};
+    profile.id = data.id;
+    profile.displayName = data.displayName;
+    profile.emails = [{ value: data.mail || data.userPrincipalName }];
 
-	// Find out what is available by uncommenting this line:
-	// console.log(data);
-
-	const profile = {};
-	profile.id = data.id;
-	profile.displayName = data.name;
-	profile.emails = [{ value: data.email }];
-
-	// Do you want to automatically make somebody an admin? This line might help you do that...
-	// profile.isAdmin = data.isAdmin ? true : false;
-
-	// Delete or comment out the next TWO (2) lines when you are ready to proceed
-	process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-	return callback(new Error('Congrats! So far so good -- please see server log for details'));
-
-	// eslint-disable-next-line
-		callback(null, profile);
+    callback(null, profile);
 };
 
 OAuth.login = async (payload) => {

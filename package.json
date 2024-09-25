@@ -1,60 +1,19 @@
 {
-  "name": "nodebb-plugin-sso-oauth",
-  "version": "0.5.0",
-  "description": "NodeBB Generic OAuth SSO",
+  "name": "nodebb-plugin-microsoft-auth",
+  "version": "1.0.0",
+  "description": "A Microsoft authentication plugin for NodeBB using Microsoft Graph API",
   "main": "library.js",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth"
-  },
   "keywords": [
     "nodebb",
     "plugin",
+    "microsoft",
     "oauth",
-    "oauth2",
-    "sso",
-    "single sign on",
-    "login",
-    "registration"
+    "graph-api"
   ],
-  "author": {
-    "name": "Julian Lam",
-    "email": "julian@nodebb.org"
-  },
+  "author": "Your Name",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth/issues"
-  },
-  "readme": "",
-  "readmeFilename": "README.md",
   "dependencies": {
-    "async": "^3.2.0",
-    "passport-oauth": "~1.0.0",
-    "passport-azure-ad": "^4.3.1"
-  },
-  "nbbpm": {
-    "compatibility": "^1.0.1",
-    "index": false
-  },
-  "devDependencies": {
-    "@commitlint/config-angular": "15.0.0",
-    "eslint": "^9.0.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-nodebb": "^0.2.1",
-    "eslint-plugin-import": "^2.27.5",
-    "husky": "9.1.6",
-    "lint-staged": "15.2.10"
-  },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged",
-      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
-    }
-  },
-  "lint-staged": {
-    "*.js": [
-      "eslint --fix",
-      "git add"
-    ]
+    "node-fetch": "^2.7.0",
+    "passport": "^0.7.0"
   }
 }

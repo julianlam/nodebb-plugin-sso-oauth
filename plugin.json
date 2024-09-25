@@ -1,12 +1,34 @@
 {
-	"id": "nodebb-plugin-sso-oauth",
-	"name": "NodeBB OAuth SSO",
-	"description": "NodeBB Plugin that allows users to login/register via any configured OAuth provider.",
-	"url": "https://github.com/julianlam/nodebb-plugin-sso-oauth",
-	"library": "./library.js",
-	"hooks": [
-		{ "hook": "static:user.delete", "method": "deleteUserData" },
-		{ "hook": "filter:user.whitelistFields", "method": "whitelistFields" },
-		{ "hook": "filter:auth.init", "method": "getStrategy" }
-	]
+  "id": "nodebb-plugin-microsoft-auth",
+  "name": "Microsoft Auth",
+  "description": "A plugin for NodeBB that enables Single Sign-On (SSO) using Microsoft Azure Active Directory (Azure AD) via OAuth2.",
+  "url": "https://github.com/your-username/nodebb-plugin-microsoft-auth",
+  "library": "./library.js",
+  "hooks": [
+    {
+      "hook": "static:app.load",
+      "method": "init"
+    },
+    {
+      "hook": "static:router",
+      "method": "addRoutes"
+    }
+  ],
+  "scripts": [
+    "node_modules/mongoose/index.js",
+    "node_modules/passport/index.js",
+    "node_modules/passport-azure-ad/index.js",
+    "node_modules/cors/index.js",
+    "node_modules/node-fetch/index.js"
+  ],
+  "dependencies": {
+    "mongoose": "^6.0.0",
+    "passport": "^0.4.1",
+    "passport-azure-ad": "^4.3.0",
+    "cors": "^2.8.5",
+    "node-fetch": "^2.6.1"
+  },
+  "version": "1.0.0",
+  "author": "Your Name",
+  "license": "MIT"
 }

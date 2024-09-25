@@ -1,206 +1,182 @@
-'use strict';
-
-/*
-		Welcome to the SSO OAuth plugin! If you're inspecting this code, you're probably looking to
-		hook up NodeBB with your existing OAuth endpoint.
-
-		Step 1: Fill in the "constants" section below with the requisite informaton. Either the "oauth"
-				or "oauth2" section needs to be filled, depending on what you set "type" to.
-
-		Step 2: Give it a whirl. If you see the congrats message, you're doing well so far!
-
-		Step 3: Customise the `parseUserReturn` method to normalise your user route's data return into
-				a format accepted by NodeBB. Instructions are provided there. (Line 146)
-
-		Step 4: If all goes well, you'll be able to login/register via your OAuth endpoint credentials.
-	*/
-
-const User = require.main.require('./src/user');
-const Groups = require.main.require('./src/groups');
+const passport = require('passport');
+const OIDCStrategy = require('passport-azure-ad').OIDCStrategy;
+const mongoose = require('mongoose');
+const user = require.main.require('./src/user');
+const groups = require.main.require('./src/groups');
 const db = require.main.require('./src/database');
 const authenticationController = require.main.require('./src/controllers/authentication');
-
-const async = require('async');
-
-const AzureAdOAuth2Strategy = require('passport-azure-ad').OAuth2Strategy;
-const nconf = require.main.require('nconf');
 const winston = require.main.require('winston');
+const fetch = require('node-fetch');
+const cors = require('cors');
+const plugin = {};
 
-/**
-	 * REMEMBER
-	 *   Never save your OAuth Key/Secret or OAuth2 ID/Secret pair in code! It could be published and leaked accidentally.
-	 *   Save it into your config.json file instead:
-	 *
-	 *   {
-	 *     ...
-	 *     "oauth": {
-	 *       "id": "someoauthid",
-	 *       "secret": "youroauthsecret"
-	 *     }
-	 *     ...
-	 *   }
-	 *
-	 *   ... or use environment variables instead:
-	 *
-	 *   `OAUTH__ID=someoauthid OAUTH__SECRET=youroauthsecret node app.js`
-	 */
+// Enable CORS for localhost:3000 (React app)
+//Todo : Need to remove dynamic urls  , keys to configure from config.js 
 
-const constants = Object.freeze({
-    type: 'oauth2',
-    name: 'azuread',
-    oauth2: {
-        authorizationURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/authorize',
-        tokenURL: 'https://login.microsoftonline.com/common/oauth2/v2.0/token',
-        clientID: nconf.get('oauth:id'),
-        clientSecret: nconf.get('oauth:secret'),
-    },
-    userRoute: 'https://graph.microsoft.com/v1.0/me',
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  credentials: true,  // Allows cookies and session tokens to be sent with requests
+  optionsSuccessStatus: 204
+};
+  // Apply CORS middleware
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/nodebb-users', { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Define the User schema in MongoDB
+const userSchema = new mongoose.Schema({
+  microsoftId: String,
+  username: String,
+  email: String,
+  createdAt: { type: Date, default: Date.now }
 });
 
-const OAuth = {};
-let configOk = false;
-let opts;
+const UserModel = mongoose.model('User', userSchema);
 
-if (!constants.name) {
-	winston.error('[sso-oauth] Please specify a name for your OAuth provider (library.js:32)');
-} else if (!constants.type || (constants.type !== 'oauth' && constants.type !== 'oauth2')) {
-	winston.error('[sso-oauth] Please specify an OAuth strategy to utilise (library.js:31)');
-} else if (!constants.userRoute) {
-	winston.error('[sso-oauth] User Route required (library.js:31)');
-} else {
-	configOk = true;
-}
 
-OAuth.getStrategy = function (strategies, callback) {
-	if (configOk) {
-        opts = {
-            clientID: constants.oauth2.clientID,
-            clientSecret: constants.oauth2.clientSecret,
-            callbackURL: `${nconf.get('url')}/auth/${constants.name}/callback`,
-            resource: 'https://graph.microsoft.com',
-            tenant: 'common',
-            authorizationURL: constants.oauth2.authorizationURL,
-            tokenURL: constants.oauth2.tokenURL,
-            passReqToCallback: true,
-        };
 
-        passport.use(constants.name, new AzureAdOAuth2Strategy(opts, async (req, accessToken, refreshToken, params, profile, done) => {
-            const graphClient = require('@microsoft/microsoft-graph-client').Client.init({
-                authProvider: (done) => {
-                    done(null, accessToken);
-                }
-            });
+// Azure AD OAuth2 Strategy for SSO
+passport.use(new OIDCStrategy({
+  identityMetadata: `https://login.microsoftonline.com/c90739ab-31ce-4e93-9afb-f86eb9ac4a73/v2.0/.well-known/openid-configuration`,
+  clientID: 'd606fcc3-136d-4924-b553-a254361f6203',
+  clientSecret: 'cb9be2cd-58f5-4eb8-84e2-56a200c130e1',
+  responseType: 'code',
+  responseMode: 'form_post',
+  redirectUrl: 'http://localhost:4567/auth/callback',
+  allowHttpForRedirectUrl: true,
+  validateIssuer: false,
+  passReqToCallback: true,
+  scope: ['profile', 'email', 'openid'],
+}, async function (req, iss, sub, profile, accessToken, refreshToken, done) {
+  try {
+    if (!profile.oid) {
+      return done(new Error('No oid found'), null);
+    }
 
-            try {
-                const user = await graphClient.api('/me').get();
-                OAuth.parseUserReturn(user, (err, profile) => {
-                    if (err) return done(err);
-                    profile.provider = constants.name;
+    // Login or register the user in NodeBB
+    const user = await plugin.login({
+      oAuthid: profile.oid,
+      handle: profile.displayName,
+      email: profile.emails[0].value || profile.userPrincipalName,
+    });
 
-                    OAuth.login({
-                        oAuthid: profile.id,
-                        handle: profile.displayName,
-                        email: profile.emails[0].value,
-                        isAdmin: false,
-                    }).then((user) => {
-                        authenticationController.onSuccessfulLogin(req, user.uid);
-                        done(null, user);
-                    }).catch((err) => {
-                        done(err);
-                    });
-                });
-            } catch (err) {
-                done(err);
-            }
-        }));
+    done(null, { uid: user.uid });
+  } catch (error) {
+    done(error);
+  }
+}));
 
-		strategies.push({
-			name: constants.name,
-			url: `/auth/${constants.name}`,
-			callbackURL: `/auth/${constants.name}/callback`,
-			icon: 'fa-windows',
-			scope: ['openid', 'profile', 'email', 'User.Read'],
-		});
+// Route Initialization
+plugin.init = function (params, callback) {
+  console.log('Microsoft auth endpoint hit');
+  const app = params.router;
+  const middleware = params.middleware;
+  // Configure CORS
+  app.use(cors(corsOptions)); // Apply CORS middleware
+  // Route for manual Microsoft Graph login via access token
+  app.post('/api/auth/microsoft', middleware.applyCSRF, async (req, res) => {
+    const { accessToken } = req.body;
+    if (!accessToken) {
+      return res.status(400).json({ error: 'Access token is required' });
+    }
 
-		callback(null, strategies);
-	} else {
-		callback(new Error('OAuth Configuration is invalid'));
-	}
+    try {
+      // Fetch user profile from Microsoft Graph
+      const profile = await plugin.getUserProfileFromGraph(accessToken);
+
+      // Log in or register the user in NodeBB
+      const user = await plugin.login({
+        oAuthid: profile.id,
+        handle: profile.displayName,
+        email: profile.mail || profile.userPrincipalName,
+      });
+
+      // Create a session
+      req.uid = user.uid;
+      authenticationController.onSuccessfulLogin(req, res, null);
+
+      res.json({ message: 'Login successful'  });
+    } catch (error) {
+      winston.error('Authentication error:', error);
+      res.status(500).json({ error: 'Authentication failed' });
+    }
+  });
+  callback();
 };
 
-OAuth.parseUserReturn = function (data, callback) {
-    const profile = {};
-    profile.id = data.id;
-    profile.displayName = data.displayName;
-    profile.emails = [{ value: data.mail || data.userPrincipalName }];
-
-    callback(null, profile);
+// Fetch user profile from Microsoft Graph
+plugin.getUserProfileFromGraph = async function (accessToken) {
+  const response = await fetch('https://graph.microsoft.com/v1.0/me', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  if (!response.ok) {
+    throw new Error('Failed to fetch user profile');
+  }
+  return await response.json();
 };
 
-OAuth.login = async (payload) => {
-	let uid = await OAuth.getUidByOAuthid(payload.oAuthid);
-	if (uid !== null) {
-		// Existing User
-		return ({
-			uid: uid,
-		});
-	}
+// Handle user login or registration
+plugin.login = async function (payload) {
+  let uid = await plugin.getUidByOAuthid(payload.oAuthid);
+  if (uid) {
+    // Update user in MongoDB if already exists
+    await UserModel.findOneAndUpdate(
+      { microsoftId: payload.oAuthid },
+      { username: payload.handle, email: payload.email },
+      { new: true, upsert: true }
+    );
+    return { uid };
+  }
 
-	// Check for user via email fallback
-	uid = await User.getUidByEmail(payload.email);
-	if (!uid) {
-		/**
-			 * The email retrieved from the user profile might not be trusted.
-			 * Only you would know — it's up to you to decide whether or not to:
-			 *   - Send the welcome email which prompts for verification (default)
-			 *   - Bypass the welcome email and automatically verify the email (commented out, below)
-			 */
-		const { email } = payload;
+  // Try finding the user by email
+  uid = await user.getUidByEmail(payload.email);
+  if (!uid) {
+    uid = await user.create({
+      username: payload.handle,
+      email: payload.email,
+    });
+  }
 
-		// New user
-		uid = await User.create({
-			username: payload.handle,
-			email, // if you uncomment the block below, comment this line out
-		});
+  // Associate the Microsoft OAuth ID with the user
+  await user.setUserField(uid, 'microsoftId', payload.oAuthid);
+  await db.setObjectField('microsoftId:uid', payload.oAuthid, uid);
 
-		// Automatically confirm user email
-		// await User.setUserField(uid, 'email', email);
-		// await UserEmail.confirmByUid(uid);
-	}
+  // Save new user in MongoDB
+  const newUser = new UserModel({
+    microsoftId: payload.oAuthid,
+    username: payload.handle,
+    email: payload.email
+  });
 
-	// Save provider-specific information to the user
-	await User.setUserField(uid, `${constants.name}Id`, payload.oAuthid);
-	await db.setObjectField(`${constants.name}Id:uid`, payload.oAuthid, uid);
+  await newUser.save();
 
-	if (payload.isAdmin) {
-		await Groups.join('administrators', uid);
-	}
-
-	return {
-		uid: uid,
-	};
+  return { uid };
 };
 
-OAuth.getUidByOAuthid = async oAuthid => db.getObjectField(`${constants.name}Id:uid`, oAuthid);
-
-OAuth.deleteUserData = function (data, callback) {
-	async.waterfall([
-		async.apply(User.getUserField, data.uid, `${constants.name}Id`),
-		function (oAuthIdToDelete, next) {
-			db.deleteObjectField(`${constants.name}Id:uid`, oAuthIdToDelete, next);
-		},
-	], (err) => {
-		if (err) {
-			winston.error(`[sso-oauth] Could not remove OAuthId data for uid ${data.uid}. Error: ${err}`);
-			return callback(err);
-		}
-
-		callback(null, data);
-	});
+// Get UID by OAuth ID
+plugin.getUidByOAuthid = async function (oAuthid) {
+  return await db.getObjectField('microsoftId:uid', oAuthid);
 };
 
-// If this filter is not there, the deleteUserData function will fail when getting the oauthId for deletion.
-OAuth.whitelistFields = function (params, callback) {
-	params.whitelist.push(`${constants.name}Id`);
-	callback(null, params);
+// Middleware to authenticate the user
+plugin.authenticate = function (req, res, next) {
+  passport.authenticate('azuread-openidconnect', {
+    response: res,
+    failureRedirect: '/login',
+  })(req, res, next);
 };
+
+// Add routes for SSO login
+plugin.addRoutes = function (params, callback) {
+  const app = params.router;
+  app.get('/auth/azure', passport.authenticate('azuread-openidconnect'));
+  app.post('/auth/azure/callback', passport.authenticate('azuread-openidconnect', {
+    failureRedirect: '/login',
+    successRedirect: '/',
+  }));
+  callback();
+};
+
+module.exports = plugin;

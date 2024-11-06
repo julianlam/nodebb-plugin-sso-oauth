@@ -221,7 +221,7 @@ OAuth.login = async (payload) => {
 
 		// Automatically confirm user email
 		// await User.setUserField(uid, 'email', email);
-		// await UserEmail.confirmByUid(uid);
+		// await User.email.confirmByUid(uid);
 	}
 
 	// Save provider-specific information to the user

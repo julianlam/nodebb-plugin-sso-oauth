@@ -64,7 +64,7 @@ const constants = Object.freeze({
 	userRoute: '', // This is the address to your app's "user profile" API endpoint (expects JSON)
 });
 
-const OAuth = {};
+const OAuth = module.exports;
 let configOk = false;
 let passportOAuth;
 let opts;

@@ -39,7 +39,7 @@
     "@commitlint/config-angular": "19.5.0",
     "eslint": "^9.0.0",
     "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-nodebb": "^0.2.1",
+    "eslint-config-nodebb": "^1.0.0",
     "eslint-plugin-import": "^2.27.5",
     "husky": "9.1.7",
     "lint-staged": "15.5.0"

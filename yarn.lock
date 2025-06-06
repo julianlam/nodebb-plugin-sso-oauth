@@ -615,9 +615,9 @@ eslint-config-airbnb-base@15.0.0:
     semver "^6.3.0"
 
 eslint-config-nodebb@^1.0.0:
-  version "1.1.6"
-  resolved "https://registry.yarnpkg.com/eslint-config-nodebb/-/eslint-config-nodebb-1.1.6.tgz#f04e7045f6a6610d9f2450ac1fcfd1e87d7c9933"
-  integrity sha512-Ak3IMAKkKe2Bi8xXIasTo+qjtF6IcUsrdNMdnyEFuJfscxykVmQcyhLL5J0mlE6mnk/5GEGBAEaRbaStKsNFxQ==
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/eslint-config-nodebb/-/eslint-config-nodebb-1.1.7.tgz#539bb6552b459c7b1133bfe176215136efb76b59"
+  integrity sha512-sdxh4+z0cvzjjpPoubkwl/1+ampG6OERs6vkuM8GzYWkXGBc2vnlBzw4bMpw6Nx6ACe3JBOP3MiVLOBzIGnlMw==
 
 eslint-import-resolver-node@^0.3.9:
   version "0.3.9"

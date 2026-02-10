@@ -621,10 +621,12 @@ eslint-config-airbnb-base@15.0.0:
     object.entries "^1.1.5"
     semver "^6.3.0"
 
-eslint-config-nodebb@^1.0.0:
-  version "1.1.11"
-  resolved "https://registry.yarnpkg.com/eslint-config-nodebb/-/eslint-config-nodebb-1.1.11.tgz#7a30237e8fb1a2e4a96d4a046af8f71398b5a8d6"
-  integrity sha512-UEAPQgOG0bof5gcnmw4KANVNdmkL63n4Xu3SvkVT0HgOfnlG0OfYtIaBiTXztvAktUr/pvV/BEpWGOJFfJvbKg==
+eslint-config-nodebb@^2.0.0:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/eslint-config-nodebb/-/eslint-config-nodebb-2.0.1.tgz#23b540210ec19e293f8d10d1cd59a2c1d22caea3"
+  integrity sha512-06QoLSEtjcUOstURvS4T2GyTFQOUdD/dCvJkrNi+CQ+9uJPpM41uZQAKJi94gv9OFTeLSdoqxESUXLbw2czqjw==
+  dependencies:
+    globals "17.3.0"
 
 eslint-import-resolver-node@^0.3.9:
   version "0.3.9"
@@ -919,6 +921,11 @@ glob-parent@^6.0.2:
   integrity sha512-XxwI8EOhVQgWp6iDL+3b0r86f4d6AX6zSU55HfB4ydCEuXLXc5FcYeOu+nnGftS4TEju/11rt4KJPTMgbfmv4A==
   dependencies:
     is-glob "^4.0.3"
+
+globals@17.3.0:
+  version "17.3.0"
+  resolved "https://registry.yarnpkg.com/globals/-/globals-17.3.0.tgz#8b96544c2fa91afada02747cc9731c002a96f3b9"
+  integrity sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==
 
 globalthis@^1.0.3, globalthis@^1.0.4:
   version "1.0.4"

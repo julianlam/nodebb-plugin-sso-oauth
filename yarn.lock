@@ -2,17 +2,17 @@
 # yarn lockfile v1
 
 
-"@commitlint/config-angular-type-enum@^19.5.0":
-  version "19.5.0"
-  resolved "https://registry.yarnpkg.com/@commitlint/config-angular-type-enum/-/config-angular-type-enum-19.5.0.tgz#ce6d7890574a7ddef5d26ba35c34e733c4fb7583"
-  integrity sha512-4/6xrkElCSBb7+6oZXlBJ/zytkxXgmTg5gk1Voj3GAWShTivtWrPtDYvHmF858WhA695YKgxMHEPNN74UFkK8w==
+"@commitlint/config-angular-type-enum@^20.0.0":
+  version "20.0.0"
+  resolved "https://registry.yarnpkg.com/@commitlint/config-angular-type-enum/-/config-angular-type-enum-20.0.0.tgz#11f7f130f4f1db1945b7470aa9ab98f3fa0fc76f"
+  integrity sha512-6HAMnXyUl3EUBgECjvfLzlghbkMfZx28YBPDry3pPWR0+xpzqSbUY19VIkmdetqYKeawFViudvkqD4VH93gKKg==
 
-"@commitlint/config-angular@19.5.0":
-  version "19.5.0"
-  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-19.5.0.tgz#68c3f61954c5b20a3ce22ffe34c1488219e4df90"
-  integrity sha512-EPQBuSK4uVNUj2HhWSJjmfHqgPpST//h07oIzcPK2FauFGGGX0Vt+kzNxnQRDEEUvSAHDRNTDWNaFv66Hlle6A==
+"@commitlint/config-angular@20.4.3":
+  version "20.4.3"
+  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-20.4.3.tgz#c83b8a69d19c984455d919b780f32ae460bea1c6"
+  integrity sha512-WawaRHilu/5ezf1YicqpQcWNzBY+Yn/+plHl2ZTN+9sdItrZSmC1oVeg4tSKeJPLFky2aFBp6rhs1y65uu83gA==
   dependencies:
-    "@commitlint/config-angular-type-enum" "^19.5.0"
+    "@commitlint/config-angular-type-enum" "^20.0.0"
 
 "@eslint-community/eslint-utils@^4.8.0":
   version "4.9.1"

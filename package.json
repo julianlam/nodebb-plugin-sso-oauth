@@ -36,7 +36,7 @@
     "index": false
   },
   "devDependencies": {
-    "@commitlint/config-angular": "19.5.0",
+    "@commitlint/config-angular": "19.8.1",
     "eslint": "^10.0.0",
     "eslint-config-airbnb-base": "15.0.0",
     "eslint-config-nodebb": "^2.0.0",

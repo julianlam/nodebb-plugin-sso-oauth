@@ -7,10 +7,10 @@
   resolved "https://registry.yarnpkg.com/@commitlint/config-angular-type-enum/-/config-angular-type-enum-21.0.1.tgz#6353f61ba3ff08227fba93a56bf7a014cd105790"
   integrity sha512-xTQlgHTaQyXfFpPI3w2dI7ppuTDWmF++1W/kgNohRpxhBzAoJxc6Q/2P7EjvJodtVl7+38xHyu0STtV4ERXdhg==
 
-"@commitlint/config-angular@21.0.2":
-  version "21.0.2"
-  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-21.0.2.tgz#9e9d549309afe1d7c5b7bc5ef2a001d4bb5d7c9a"
-  integrity sha512-r9MQv2ncceCvhr4S3vECbuW1771Di6csfKvFDXEGAJPaW+iTC13gh4Zs5CH9C35SAbZhaAXbIC7iRBTYPocSrQ==
+"@commitlint/config-angular@21.1.0":
+  version "21.1.0"
+  resolved "https://registry.yarnpkg.com/@commitlint/config-angular/-/config-angular-21.1.0.tgz#564b6ee3b4a970996026c490d72bf386a813fde5"
+  integrity sha512-g7BhcthkgBEIZnZSCYvAdktA5+ydwq4AaKrt2dfwqnEvHVECA0ClXBoU0eRWlCeRxkm2jhc4lnCU4ZUAyVQqlA==
   dependencies:
     "@commitlint/config-angular-type-enum" "^21.0.1"
 

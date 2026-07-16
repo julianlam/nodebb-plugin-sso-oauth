@@ -7,6 +7,9 @@
     "type": "git",
     "url": "https://github.com/julianlam/nodebb-plugin-sso-oauth"
   },
+  "scripts": {
+    "lint": "eslint ."
+  },
   "keywords": [
     "nodebb",
     "plugin",
@@ -28,19 +31,16 @@
   "readme": "",
   "readmeFilename": "README.md",
   "dependencies": {
-    "async": "^3.2.0",
     "passport-oauth": "~1.0.0"
   },
   "nbbpm": {
-    "compatibility": "^1.0.1",
+    "compatibility": "^4.14.0",
     "index": false
   },
   "devDependencies": {
     "@commitlint/config-angular": "21.1.0",
-    "eslint": "^10.0.0",
-    "eslint-config-airbnb-base": "15.0.0",
-    "eslint-config-nodebb": "^2.0.0",
-    "eslint-plugin-import": "^2.27.5",
+    "eslint": "^10.7.0",
+    "eslint-config-nodebb": "^2.0.3",
     "husky": "9.1.7",
     "lint-staged": "17.0.8"
   },

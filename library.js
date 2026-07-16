@@ -10,21 +10,19 @@
 		Step 2: Give it a whirl. If you see the congrats message, you're doing well so far!
 
 		Step 3: Customise the `parseUserReturn` method to normalise your user route's data return into
-				a format accepted by NodeBB. Instructions are provided there. (Line 146)
+				a format accepted by NodeBB. Instructions are provided there. (Line 174)
 
 		Step 4: If all goes well, you'll be able to login/register via your OAuth endpoint credentials.
 	*/
 
-const User = require.main.require('./src/user');
-const Groups = require.main.require('./src/groups');
-const db = require.main.require('./src/database');
-const authenticationController = require.main.require('./src/controllers/authentication');
+const passport = nodebb.require('passport');
+const nconf = nodebb.require('nconf');
+const winston = nodebb.require('winston');
 
-const async = require('async');
+const User = nodebb.require('./src/user');
+const Groups = nodebb.require('./src/groups');
+const db = nodebb.require('./src/database');
 
-const passport = require.main.require('passport');
-const nconf = require.main.require('nconf');
-const winston = require.main.require('winston');
 
 /**
 	 * REMEMBER
@@ -79,97 +77,101 @@ if (!constants.name) {
 	configOk = true;
 }
 
-OAuth.getStrategy = function (strategies, callback) {
-	if (configOk) {
-		passportOAuth = require('passport-oauth')[constants.type === 'oauth' ? 'OAuthStrategy' : 'OAuth2Strategy'];
+OAuth.getStrategy = function (strategies) {
+	if (!configOk) {
+		throw new Error('OAuth Configuration is invalid');
+	}
+	passportOAuth = require('passport-oauth')[constants.type === 'oauth' ? 'OAuthStrategy' : 'OAuth2Strategy'];
 
-		if (constants.type === 'oauth') {
-			// OAuth options
-			opts = constants.oauth;
-			opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
+	if (constants.type === 'oauth') {
+		// OAuth options
+		opts = constants.oauth;
+		opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
 
-			passportOAuth.Strategy.prototype.userProfile = function (token, secret, params, done) {
-				// If your OAuth provider requires the access token to be sent in the query  parameters
-				// instead of the request headers, comment out the next line:
-				this._oauth._useAuthorizationHeaderForGET = true;
+		passportOAuth.Strategy.prototype.userProfile = function (token, secret, params, done) {
+			// If your OAuth provider requires the access token to be sent in the query  parameters
+			// instead of the request headers, comment out the next line:
+			this._oauth._useAuthorizationHeaderForGET = true;
 
-				this._oauth.get(constants.userRoute, token, secret, (err, body/* , res */) => {
-					if (err) {
-						return done(err);
-					}
+			this._oauth.get(constants.userRoute, token, secret, (err, body/* , res */) => {
+				if (err) {
+					return done(err);
+				}
 
-					try {
-						const json = JSON.parse(body);
-						OAuth.parseUserReturn(json, (err, profile) => {
-							if (err) return done(err);
-							profile.provider = constants.name;
-
-							done(null, profile);
-						});
-					} catch (e) {
-						done(e);
-					}
-				});
-			};
-		} else if (constants.type === 'oauth2') {
-			// OAuth 2 options
-			opts = constants.oauth2;
-			opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
-
-			passportOAuth.Strategy.prototype.userProfile = function (accessToken, done) {
-				// If your OAuth provider requires the access token to be sent in the query  parameters
-				// instead of the request headers, comment out the next line:
-				this._oauth2._useAuthorizationHeaderForGET = true;
-
-				this._oauth2.get(constants.userRoute, accessToken, (err, body/* , res */) => {
-					if (err) {
-						return done(err);
-					}
-
-					try {
-						const json = JSON.parse(body);
-						OAuth.parseUserReturn(json, (err, profile) => {
-							if (err) return done(err);
-							profile.provider = constants.name;
-
-							done(null, profile);
-						});
-					} catch (e) {
-						done(e);
-					}
-				});
-			};
-		}
-
-		opts.passReqToCallback = true;
-
-		passport.use(constants.name, new passportOAuth(opts, async (req, token, secret, profile, done) => {
-			const user = await OAuth.login({
-				oAuthid: profile.id,
-				handle: profile.displayName,
-				email: profile.emails[0].value,
-				isAdmin: profile.isAdmin,
+				try {
+					const json = JSON.parse(body);
+					const profile = OAuth.parseUserReturn(json);
+					profile.provider = constants.name;
+					done(null, profile);
+				} catch (err) {
+					done(err);
+				}
 			});
+		};
+	} else if (constants.type === 'oauth2') {
+		// OAuth 2 options
+		opts = constants.oauth2;
+		opts.callbackURL = `${nconf.get('url')}/auth/${constants.name}/callback`;
 
-			authenticationController.onSuccessfulLogin(req, user.uid);
-			done(null, user);
-		}));
+		passportOAuth.Strategy.prototype.userProfile = function (accessToken, done) {
+			// If your OAuth provider requires the access token to be sent in the query  parameters
+			// instead of the request headers, comment out the next line:
+			this._oauth2._useAuthorizationHeaderForGET = true;
 
-		strategies.push({
-			name: constants.name,
-			url: `/auth/${constants.name}`,
-			callbackURL: `/auth/${constants.name}/callback`,
-			icon: 'fa-check-square',
-			scope: (constants.scope || '').split(','),
+			this._oauth2.get(constants.userRoute, accessToken, (err, body/* , res */) => {
+				if (err) {
+					return done(err);
+				}
+
+				try {
+					const json = JSON.parse(body);
+					const profile = OAuth.parseUserReturn(json);
+					profile.provider = constants.name;
+					done(null, profile);
+				} catch (err) {
+					done(err);
+				}
+			});
+		};
+	}
+
+	opts.passReqToCallback = true;
+
+	passport.use(constants.name, new passportOAuth(opts, async (req, token, secret, profile, done) => {
+		const { queued, uid, message } = await OAuth.login({
+			oAuthid: profile.id,
+			handle: profile.displayName,
+			email: profile.emails[0].value,
+			isAdmin: profile.isAdmin,
 		});
 
-		callback(null, strategies);
-	} else {
-		callback(new Error('OAuth Configuration is invalid'));
-	}
+		if (queued) {
+			return done(null, false, { message });
+		}
+
+		done(null, { uid });
+	}));
+
+	strategies.push({
+		name: constants.name,
+		url: `/auth/${constants.name}`,
+		callbackURL: `/auth/${constants.name}/callback`,
+		icon: 'fa-check-square',
+		icons: {
+			normal: 'fa-brands fa-xxx',
+			square: 'fa-brands fa-xxx-square',
+		},
+		labels: {
+			login: '[[social:log-in-with-xxx]]',
+			register: '[[social:register-with-xxx]]',
+		},
+		scope: (constants.scope || '').split(','),
+	});
+
+	return strategies;
 };
 
-OAuth.parseUserReturn = function (data, callback) {
+OAuth.parseUserReturn = function (data) {
 	// Alter this section to include whatever data is necessary
 	// NodeBB *requires* the following: id, displayName, emails.
 	// Everything else is optional.
@@ -187,76 +189,106 @@ OAuth.parseUserReturn = function (data, callback) {
 
 	// Delete or comment out the next TWO (2) lines when you are ready to proceed
 	process.stdout.write('===\nAt this point, you\'ll need to customise the above section to id, displayName, and emails into the "profile" object.\n===');
-	return callback(new Error('Congrats! So far so good -- please see server log for details'));
+	throw new Error('Congrats! So far so good -- please see server log for details');
 
 	// eslint-disable-next-line
-		callback(null, profile);
+	return profile;
 };
 
 OAuth.login = async (payload) => {
 	let uid = await OAuth.getUidByOAuthid(payload.oAuthid);
-	if (uid !== null) {
-		// Existing User
-		return ({
-			uid: uid,
-		});
+	if (uid) { // Existing User
+		return { uid };
 	}
 
 	// Check for user via email fallback
 	uid = await User.getUidByEmail(payload.email);
-	if (!uid) {
-		/**
-			 * The email retrieved from the user profile might not be trusted.
-			 * Only you would know — it's up to you to decide whether or not to:
-			 *   - Send the welcome email which prompts for verification (default)
-			 *   - Bypass the welcome email and automatically verify the email (commented out, below)
-			 */
-		const { email } = payload;
-
-		// New user
-		uid = await User.create({
-			username: payload.handle,
-			email, // if you uncomment the block below, comment this line out
-		});
-
-		// Automatically confirm user email
-		// await User.setUserField(uid, 'email', email);
-		// await User.email.confirmByUid(uid);
+	if (uid) { // Link oauth account to existing user with same email
+		await Promise.all([
+			User.setUserField(uid, `${constants.name}Id`, payload.oAuthid),
+			db.setObjectField(`${constants.name}Id:uid`, payload.oAuthid, uid),
+		]);
+		return { uid };
 	}
 
-	// Save provider-specific information to the user
-	await User.setUserField(uid, `${constants.name}Id`, payload.oAuthid);
-	await db.setObjectField(`${constants.name}Id:uid`, payload.oAuthid, uid);
-
-	if (payload.isAdmin) {
-		await Groups.join('administrators', uid);
-	}
-
-	return {
-		uid: uid,
-	};
+	/**
+		 * The email retrieved from the user profile might not be trusted.
+		 * Only you would know — it's up to you to decide whether or not to:
+		 *   - Send the welcome email which prompts for verification (default)
+		 *   - Bypass the welcome email and automatically verify the email (commented out, below)
+		 */
+	const { email } = payload;
+	const autoConfirm = false; // change this to true if you want to automatically confirm the email address
+	// New user
+	return await User.createOrQueue({
+		oAuthid: payload.oAuthid, // passing to create so it can be saved in registration queue
+		username: payload.handle,
+		email,
+	}, {
+		emailVerification: autoConfirm ? 'verify' : 'send',
+		isAdmin: payload.isAdmin, // check the action:user.createHook below where the user is made an admin
+	});
 };
 
 OAuth.getUidByOAuthid = async oAuthid => db.getObjectField(`${constants.name}Id:uid`, oAuthid);
 
-OAuth.deleteUserData = function (data, callback) {
-	async.waterfall([
-		async.apply(User.getUserField, data.uid, `${constants.name}Id`),
-		function (oAuthIdToDelete, next) {
-			db.deleteObjectField(`${constants.name}Id:uid`, oAuthIdToDelete, next);
-		},
-	], (err) => {
-		if (err) {
-			winston.error(`[sso-oauth] Could not remove OAuthId data for uid ${data.uid}. Error: ${err}`);
-			return callback(err);
-		}
-
-		callback(null, data);
-	});
+OAuth.deleteUserData = async function (data) {
+	try {
+		const oAuthIdToDelete = await User.getUserField(data.uid, `${constants.name}Id`);
+		await db.deleteObjectField(`${constants.name}Id:uid`, oAuthIdToDelete);
+	} catch (err) {
+		winston.error(`[sso-oauth] Could not remove OAuthId data for uid ${data.uid}. Error: ${err}`);
+		throw err;
+	}
 };
 
 // If this filter is not there, the deleteUserData function will fail when getting the oauthId for deletion.
-OAuth.whitelistFields = function (params, callback) {
+OAuth.whitelistFields = function (params) {
 	params.whitelist.push(`${constants.name}Id`);
-	callback(null, params);
+	return params;
+};
+
+OAuth.addToApprovalQueue = async (hookData) => {
+	await saveOAuthSpecificData(hookData.data, hookData.userData);
+	return hookData;
+};
+
+OAuth.filterUserCreate = async (hookData) => {
+	await saveOAuthSpecificData(hookData.user, hookData.data);
+	return hookData;
+};
+
+async function saveOAuthSpecificData(targetObj, sourceObj) {
+	const { oAuthid } = sourceObj;
+	if (oAuthid) {
+		const uid = await OAuth.getUidByOAuthid(oAuthid);
+		if (uid) {
+			throw new Error(`[[error:sso-account-exists, ${constants.name}]]`);
+		}
+		targetObj.oAuthid = oAuthid;
+	}
+}
+
+OAuth.actionUserCreate = async (hookData) => {
+	const { uid } = hookData.user;
+	const oAuthid = await User.getUserField(uid, 'oAuthid');
+	if (oAuthid) {
+		await db.setObjectField(`${constants.name}Id:uid`, oAuthid, uid);
+		if (hookData?.opts?.isAdmin) {
+			await Groups.join('administrators', uid);
+		}
+	}
+};
+
+OAuth.filterUserGetRegistrationQueue = async (hookData) => {
+	const { users } = hookData;
+	users.forEach((user) => {
+		if (user?.fbid) {
+			user.sso = {
+				icon: 'fa-brands fa-xxx',
+				name: constants.name,
+			};
+		}
+	});
+	return hookData;
 };

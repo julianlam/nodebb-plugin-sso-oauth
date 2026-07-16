@@ -7,6 +7,11 @@
 	"hooks": [
 		{ "hook": "static:user.delete", "method": "deleteUserData" },
 		{ "hook": "filter:user.whitelistFields", "method": "whitelistFields" },
-		{ "hook": "filter:auth.init", "method": "getStrategy" }
+		{ "hook": "filter:auth.init", "method": "getStrategy" },
+		{ "hook": "filter:user.whitelistFields", "method": "appendUserHashWhitelist" },
+		{ "hook": "filter:user.addToApprovalQueue", "method": "addToApprovalQueue" },
+		{ "hook": "filter:user.create", "method": "filterUserCreate" },
+		{ "hook": "action:user.create", "method": "actionUserCreate" },
+		{ "hook": "filter:user.getRegistrationQueue", "method": "filterUserGetRegistrationQueue" }
 	]
 }

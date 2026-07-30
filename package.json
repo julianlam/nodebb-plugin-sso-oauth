@@ -38,7 +38,7 @@
     "index": false
   },
   "devDependencies": {
-    "@commitlint/config-angular": "21.1.0",
+    "@commitlint/config-angular": "21.2.0",
     "eslint": "^10.7.0",
     "eslint-config-nodebb": "^2.0.3",
     "husky": "9.1.7",

@@ -25,10 +25,10 @@
   resolved "https://registry.npmjs.org/@commitlint/config-angular-type-enum/-/config-angular-type-enum-21.0.1.tgz"
   integrity sha512-xTQlgHTaQyXfFpPI3w2dI7ppuTDWmF++1W/kgNohRpxhBzAoJxc6Q/2P7EjvJodtVl7+38xHyu0STtV4ERXdhg==
 
-"@commitlint/config-angular@21.1.0":
-  version "21.1.0"
-  resolved "https://registry.npmjs.org/@commitlint/config-angular/-/config-angular-21.1.0.tgz"
-  integrity sha512-g7BhcthkgBEIZnZSCYvAdktA5+ydwq4AaKrt2dfwqnEvHVECA0ClXBoU0eRWlCeRxkm2jhc4lnCU4ZUAyVQqlA==
+"@commitlint/config-angular@21.2.4":
+  version "21.2.4"
+  resolved "https://registry.npmjs.org/@commitlint/config-angular/-/config-angular-21.2.4.tgz"
+  integrity sha512-t+KYwW7x3hnWCrlzwGXrJePAs352f1VYPA+1G0XYgi81dMR5hWAJbO4XFe4l3BSjY/Ju2XBOUk8VksNdiIP72g==
   dependencies:
     "@commitlint/config-angular-type-enum" "^21.0.1"
 
@@ -218,9 +218,9 @@ escape-string-regexp@^4.0.0:
   resolved "https://registry.npmjs.org/escape-string-regexp/-/escape-string-regexp-4.0.0.tgz"
   integrity sha512-TtpcNJ3XAzx3Gq8sWRzJaVajRs0uVxA2YAkdb1jm2YkPz4G6egUFAyA3n5vtEIZefPk5Wa4UXbKuS5fKkJWdgA==
 
-eslint-config-nodebb@^2.0.7:
+eslint-config-nodebb@^2.0.3:
   version "2.0.7"
-  resolved "https://registry.yarnpkg.com/eslint-config-nodebb/-/eslint-config-nodebb-2.0.7.tgz#fc6d45785b8098ac06767f6266adfa1fd4d6bdc0"
+  resolved "https://registry.npmjs.org/eslint-config-nodebb/-/eslint-config-nodebb-2.0.7.tgz"
   integrity sha512-n7e0C2Z4IE3WvsJ0vYsEbn1hb7NK7y33JLWthgTaDTUs11HKIFzv7X64Xi06LEERH10llu6gASC3CnT3oU9W9Q==
   dependencies:
     globals "17.3.0"
@@ -367,7 +367,7 @@ glob-parent@^6.0.2:
 
 globals@17.3.0:
   version "17.3.0"
-  resolved "https://registry.yarnpkg.com/globals/-/globals-17.3.0.tgz#8b96544c2fa91afada02747cc9731c002a96f3b9"
+  resolved "https://registry.npmjs.org/globals/-/globals-17.3.0.tgz"
   integrity sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==
 
 hashery@^1.4.0, hashery@^1.5.1:

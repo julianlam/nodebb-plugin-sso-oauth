@@ -25,10 +25,10 @@
   resolved "https://registry.npmjs.org/@commitlint/config-angular-type-enum/-/config-angular-type-enum-21.0.1.tgz"
   integrity sha512-xTQlgHTaQyXfFpPI3w2dI7ppuTDWmF++1W/kgNohRpxhBzAoJxc6Q/2P7EjvJodtVl7+38xHyu0STtV4ERXdhg==
 
-"@commitlint/config-angular@21.1.0":
-  version "21.1.0"
-  resolved "https://registry.npmjs.org/@commitlint/config-angular/-/config-angular-21.1.0.tgz"
-  integrity sha512-g7BhcthkgBEIZnZSCYvAdktA5+ydwq4AaKrt2dfwqnEvHVECA0ClXBoU0eRWlCeRxkm2jhc4lnCU4ZUAyVQqlA==
+"@commitlint/config-angular@21.2.4":
+  version "21.2.4"
+  resolved "https://registry.npmjs.org/@commitlint/config-angular/-/config-angular-21.2.4.tgz"
+  integrity sha512-t+KYwW7x3hnWCrlzwGXrJePAs352f1VYPA+1G0XYgi81dMR5hWAJbO4XFe4l3BSjY/Ju2XBOUk8VksNdiIP72g==
   dependencies:
     "@commitlint/config-angular-type-enum" "^21.0.1"
 
